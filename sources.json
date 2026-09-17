@@ -1,0 +1,5 @@
+[
+ {"id":"huggingface","name":"Hugging Face Blog","url":"https://huggingface.co/blog/feed.xml"},
+ {"id":"google","name":"Google Research Blog","url":"https://research.google/blog/rss/"},
+ {"id":"techcrunch","name":"TechCrunch AI","url":"https://techcrunch.com/category/artificial-intelligence/feed/"}
+]
