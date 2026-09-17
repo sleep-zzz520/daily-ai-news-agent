@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>每日 AI 新闻助手</title><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js" defer></script></head>
+<body>
+<header><div><span class="eyebrow">DAILY AI / NEWS AGENT</span><h1>每日 AI 新闻助手</h1></div><span id="health" role="status">检查配置…</span></header>
+<main>
+<aside>
+<div class="section-heading"><h2>订阅</h2><button id="new-user" type="button" class="quiet">新建用户</button></div>
+<label for="users">演示用户</label><select id="users"><option value="">新用户</option></select>
+<form id="profile">
+<label for="nickname">昵称</label><input id="nickname" required maxlength="80" placeholder="如何称呼你">
+<label for="email">邮箱</label><input id="email" type="email" required placeholder="接收简报的邮箱">
+<label for="topics">关注话题</label><input id="topics" placeholder="大模型、AI Agent、开源模型">
+<label for="keywords">关键词</label><input id="keywords" placeholder="OpenAI、Hugging Face">
+<label for="excluded">排除关键词</label><input id="excluded" placeholder="融资、招聘">
+<small>多项用逗号分隔；未设置关注项时整理 AI 综合新闻。</small>
+<label for="time">每日发送时间 · 北京时间</label><input id="time" type="time" value="09:00" required>
+<label class="check"><input id="enabled" type="checkbox" checked>启用每日生成与邮件推送</label>
+<button type="submit">保存订阅</button>
+</form>
+<button id="generate" class="secondary" disabled>立即生成</button>
+<p id="message" role="status" aria-live="polite"></p>
+</aside>
+<section class="history"><div class="section-heading"><h2>历史简报</h2><button id="refresh" class="quiet">刷新</button></div><div id="history" class="scroll"><p class="muted">保存订阅后可查看历史。</p></div></section>
+<section class="reader scroll" id="reader" aria-live="polite"><div class="empty"><span class="eyebrow">YOUR DAILY BRIEF</span><h2>只关注你想了解的 AI 新闻</h2><p>设置订阅后，点击「立即生成」。<br>每份简报保留来源链接与工具调用记录。</p></div></section>
+</main>
+<footer>公开 RSS 摘要 · 模型自主调用工具 · 本地演示版，无登录认证</footer>
+</body></html>

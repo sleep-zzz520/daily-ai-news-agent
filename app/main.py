@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints
 
 load_dotenv()
 
@@ -18,9 +18,10 @@ from app.mail import send_mail
 from app.service import TASKS, create_run, execute_run, scheduler, spawn
 from app.tools import SOURCES
 
-Keyword = Annotated[str, Field(min_length=1, max_length=100, strip_whitespace=True)]
+Keyword = Annotated[str, StringConstraints(min_length=1, max_length=100, strip_whitespace=True)]
 
 class Profile(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra='forbid')
     nickname: str = Field(min_length=1, max_length=80)
     email: EmailStr
     topics: list[Keyword] = Field(default_factory=list, max_length=30)
@@ -124,6 +125,8 @@ async def send(user_id: str, run_id: str):
     run = owned_run(user_id, run_id)
     if run['status'] != 'completed':
         raise HTTPException(409, '简报尚未生成成功')
+    if run['brief'].get('is_demo'):
+        raise HTTPException(409, '离线模拟简报不可发送邮件')
     try:
         status = await asyncio.to_thread(send_mail, run_id, user(user_id), run['brief'])
     except Exception:
