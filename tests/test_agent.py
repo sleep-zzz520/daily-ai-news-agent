@@ -71,6 +71,15 @@ def test_exclusion_duplicate_and_empty(tmp_path):
         validate_brief(dumps({**BRIEF, 'items': BRIEF['items'] * 2}), t, PROFILE)
     assert validate_brief(dumps({**BRIEF, 'items': []}), t, PROFILE)['items'] == []
 
+def test_empty_result_explains_candidates_and_deduplication(tmp_path):
+    t = tools(tmp_path)
+    empty = dumps({**BRIEF, 'items': []})
+    assert '1 条候选' in validate_brief(empty, t, PROFILE)['note']
+    t.news.clear()
+    assert '没有返回候选' in validate_brief(empty, t, PROFILE)['note']
+    t.deduplicated_urls.add(ARTICLE['url'])
+    assert '自动推送已去重' in validate_brief(empty, t, PROFILE)['note']
+
 @pytest.mark.parametrize('path', ['../.env', '/etc/passwd', '../../x'])
 def test_path_escape(tmp_path, path):
     with pytest.raises(ValueError):

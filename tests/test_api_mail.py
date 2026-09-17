@@ -55,6 +55,21 @@ def test_execution_persists_and_automatic_mail(monkeypatch):
         assert db.execute('SELECT status FROM runs WHERE id=?', (run,)).fetchone()[0] == 'completed'
     assert sent == [run]
 
+def test_manual_regeneration_keeps_news_automatic_deduplicates(monkeypatch):
+    completed_run()
+    captured = []
+    async def fake_generate(run_id, profile, recent):
+        captured.append((profile['topics'], recent))
+        return BRIEF
+    monkeypatch.setattr('app.service.generate', fake_generate)
+    monkeypatch.setattr('app.service.send_mail', lambda *args: None)
+    with connect() as db:
+        db.execute('UPDATE users SET profile=? WHERE id=?', (dumps({**PROFILE, 'topics': ['人工智能安全']}), 'u'))
+    asyncio.run(execute_run(create_run('u')))
+    assert captured[-1] == (['人工智能安全'], [])
+    asyncio.run(execute_run(create_run('u'), automatic=True))
+    assert ARTICLE['url'] in captured[-1][1]
+
 def configure(monkeypatch):
     monkeypatch.setenv('SMTP_HOST', 'smtp.example.com')
     monkeypatch.setenv('SMTP_FROM', 'sender@example.com')

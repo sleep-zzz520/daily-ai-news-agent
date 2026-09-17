@@ -36,7 +36,7 @@ async def execute_run(run_id, automatic=False):
             run = db.execute('SELECT * FROM runs WHERE id=?', (run_id,)).fetchone()
             profile = json.loads(db.execute('SELECT profile FROM users WHERE id=?', (run['user_id'],)).fetchone()[0])
             previous = db.execute("SELECT brief FROM runs WHERE user_id=? AND status='completed' AND created_at>=?",
-                (run['user_id'], (datetime.now(timezone.utc) - timedelta(days=7)).isoformat())).fetchall()
+                (run['user_id'], (datetime.now(timezone.utc) - timedelta(days=7)).isoformat())).fetchall() if automatic else []
         recent = [item['url'] for row in previous for item in json.loads(row['brief'])['items']]
         brief = await generate(run_id, profile, recent)
         with connect() as db:

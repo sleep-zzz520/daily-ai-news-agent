@@ -1,28 +1,24 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>每日 AI 新闻助手</title><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js" defer></script></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>每日 AI 新闻助手</title><link rel="icon" href="/static/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js" defer></script></head>
 <body>
-<header><div><span class="eyebrow">DAILY AI / NEWS AGENT</span><h1>每日 AI 新闻助手</h1></div><span id="health" role="status">检查配置…</span></header>
-<main>
-<aside>
-<div class="section-heading"><h2>订阅</h2><button id="new-user" type="button" class="quiet">新建用户</button></div>
-<label for="users">演示用户</label><select id="users"><option value="">新用户</option></select>
-<form id="profile">
-<label for="nickname">昵称</label><input id="nickname" required maxlength="80" placeholder="如何称呼你">
-<label for="email">邮箱</label><input id="email" type="email" required placeholder="接收简报的邮箱">
-<label for="topics">关注话题</label><input id="topics" placeholder="大模型、AI Agent、开源模型">
-<label for="keywords">关键词</label><input id="keywords" placeholder="OpenAI、Hugging Face">
-<label for="excluded">排除关键词</label><input id="excluded" placeholder="融资、招聘">
-<small>多项用逗号分隔；未设置关注项时整理 AI 综合新闻。</small>
-<label for="time">每日发送时间 · 北京时间</label><input id="time" type="time" value="09:00" required>
-<label class="check"><input id="enabled" type="checkbox" checked>启用每日生成与邮件推送</label>
-<button type="submit">保存订阅</button>
-</form>
-<button id="generate" class="secondary" disabled>立即生成</button>
-<p id="message" role="status" aria-live="polite"></p>
-</aside>
-<section class="history"><div class="section-heading"><h2>历史简报</h2><button id="refresh" class="quiet">刷新</button></div><div id="history" class="scroll"><p class="muted">保存订阅后可查看历史。</p></div></section>
-<section class="reader scroll" id="reader" aria-live="polite"><div class="empty"><span class="eyebrow">YOUR DAILY BRIEF</span><h2>只关注你想了解的 AI 新闻</h2><p>设置订阅后，点击「立即生成」。<br>每份简报保留来源链接与工具调用记录。</p></div></section>
-</main>
-<footer>公开 RSS 摘要 · 模型自主调用工具 · 本地演示版，无登录认证</footer>
+<a class="skip" href="#reader">跳到简报正文</a>
+<header class="app-header"><div class="brand">每日 AI 新闻助手<span>按你的关注，每天一份简报</span></div><div class="account"><label class="sr-only" for="users">当前用户</label><select id="users"><option value="">新用户</option></select><button id="settings-open" class="secondary">订阅设置</button></div></header>
+<div class="workspace-bar"><p id="subscription-summary">先设置你的关注偏好</p><nav aria-label="简报操作"><button id="history-open" class="quiet">历史简报</button><button id="generate" disabled>立即生成</button></nav></div>
+<div id="notice" role="status" aria-live="polite" hidden></div>
+<main id="content"><section id="reader" tabindex="-1" aria-label="简报正文"></section></main>
+<footer><span id="health">检查配置…</span><span>根据公开 RSS 摘要整理</span></footer>
+<dialog id="settings-panel" class="panel" aria-labelledby="settings-title"><div class="panel-heading"><h2 id="settings-title">订阅设置</h2><button class="quiet" data-close="settings-panel">关闭</button></div>
+<form id="profile"><div class="panel-body">
+<div class="section-heading"><span id="profile-owner">新用户</span><button id="new-user" type="button" class="quiet">新建用户</button></div>
+<label for="nickname">昵称</label><input id="nickname" required maxlength="80" autocomplete="nickname">
+<label for="email">收件邮箱</label><input id="email" type="email" required autocomplete="email">
+<div class="field-heading"><label for="topics">关注方向</label><details class="field-help"><summary aria-label="关注方向说明">ⓘ</summary><p>按含义筛选，不必重复填写中文和英文。符合方向或关注对象之一即可入选；两项留空时整理 AI 综合新闻。</p></details></div><input id="topics" placeholder="人工智能安全、AI 编程、开源模型">
+<div class="field-heading"><label for="keywords">关注对象 <span class="optional">选填</span></label><details class="field-help"><summary aria-label="关注对象说明">ⓘ</summary><p>特别关注的公司或产品，用于补充关注方向。多项用逗号分隔。</p></details></div><input id="keywords" placeholder="OpenAI、Claude、DeepSeek">
+<div class="field-heading"><label for="excluded">排除关键词</label><details class="field-help"><summary aria-label="排除关键词说明">ⓘ</summary><p>不希望出现在简报中的词，多项用逗号分隔。</p></details></div><input id="excluded" placeholder="融资、招聘">
+<label class="check"><input id="enabled" type="checkbox">启用每日推送</label>
+<div id="schedule-fields"><label for="time">发送时间 <span class="optional">北京时间</span></label><input id="time" type="time" value="09:00" required></div>
+<p id="form-message" class="feedback" role="status" aria-live="polite"></p>
+</div><div class="panel-actions"><span id="save-state">尚未创建订阅</span><button type="button" id="discard" class="quiet" hidden>放弃修改</button><button type="submit" id="save-profile">保存订阅</button></div></form></dialog>
+<dialog id="history-panel" class="panel" aria-labelledby="history-title"><div class="panel-heading"><h2 id="history-title">历史简报</h2><div><button id="refresh" class="quiet">刷新</button><button class="quiet" data-close="history-panel">关闭</button></div></div><div id="history" class="panel-body"></div></dialog>
 </body></html>
