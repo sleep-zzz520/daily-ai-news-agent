@@ -20,6 +20,7 @@ BRIEF = {'title': 'AI 简报', 'note': '根据摘要整理', 'items': [
 def isolated_db(tmp_path, monkeypatch):
     monkeypatch.setenv('DATA_DIR', str(tmp_path / 'data'))
     monkeypatch.delenv('OPENAI_API_KEY', raising=False)
+    monkeypatch.delenv('LLM_API_KEY', raising=False)
     monkeypatch.delenv('SMTP_HOST', raising=False)
     init_db()
     with connect() as db:

@@ -17,6 +17,7 @@ from app.db import ROOT, connect, dumps, init_db, now
 from app.mail import send_mail
 from app.service import TASKS, create_run, execute_run, scheduler, spawn
 from app.tools import SOURCES
+from app.llm_config import api_key, model_name
 
 Keyword = Annotated[str, StringConstraints(min_length=1, max_length=100, strip_whitespace=True)]
 
@@ -71,7 +72,7 @@ def index():
 
 @app.get('/api/health')
 def health():
-    return {'status': 'ok', 'model_configured': bool(os.getenv('OPENAI_API_KEY')),
+    return {'status': 'ok', 'model_configured': bool(api_key()), 'model': model_name(),
             'mail_configured': bool(os.getenv('SMTP_HOST') and os.getenv('SMTP_FROM')), 'sources': SOURCES}
 
 @app.get('/api/users')
@@ -96,8 +97,8 @@ def update_user(user_id: str, profile: Profile):
 @app.post('/api/users/{user_id}/runs', status_code=202)
 async def start_run(user_id: str):
     user(user_id)
-    if not os.getenv('OPENAI_API_KEY'):
-        raise HTTPException(503, '请先在 .env 配置 OPENAI_API_KEY')
+    if not api_key():
+        raise HTTPException(503, '请先在 .env 配置 LLM_API_KEY')
     run_id = create_run(user_id)
     if not run_id:
         raise HTTPException(409, '该用户已有任务运行中')

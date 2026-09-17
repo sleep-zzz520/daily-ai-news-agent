@@ -8,6 +8,7 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field
 from app.db import connect, data_dir, dumps
 from app.tools import SOURCES, TOOL_SCHEMAS, Tools, canonical
+from app.llm_config import api_key, endpoint, model_name
 
 class Item(BaseModel):
     model_config = ConfigDict(extra='forbid')
@@ -22,18 +23,26 @@ class Brief(BaseModel):
     note: str = Field(max_length=2000)
     items: list[Item] = Field(max_length=8)
 
-async def openai_turn(messages):
-    key = os.getenv('OPENAI_API_KEY')
+async def llm_turn(messages):
+    key = api_key()
     if not key:
-        raise ValueError('请配置 OPENAI_API_KEY')
-    async with httpx.AsyncClient(timeout=60) as client:
-        response = await client.post('https://api.openai.com/v1/chat/completions',
-            headers={'Authorization': f'Bearer {key}'}, json={
-                'model': os.getenv('OPENAI_MODEL', 'gpt-4.1-mini'), 'messages': messages,
-                'tools': TOOL_SCHEMAS, 'tool_choice': 'auto', 'max_completion_tokens': 5000,
-                'response_format': {'type': 'json_object'}, 'store': False})
+        raise ValueError('请配置 LLM_API_KEY')
+    model = model_name()
+    payload = {'model': model, 'messages': messages, 'tools': TOOL_SCHEMAS,
+               'tool_choice': 'auto', 'response_format': {'type': 'json_object'}}
+    if model.lower().startswith('glm-'):
+        payload.update(max_tokens=5000, thinking={'type': 'disabled'})
+    else:
+        payload.update(max_completion_tokens=5000, store=False)
+    async with httpx.AsyncClient(timeout=90) as client:
+        response = await client.post(endpoint(), headers={'Authorization': f'Bearer {key}'}, json=payload)
         if response.status_code >= 400:
-            raise ValueError(f'OpenAI 请求失败 HTTP {response.status_code}；请检查模型权限、额度和配置')
+            try:
+                code = str(response.json().get('error', {}).get('code', ''))
+                code = code if code.isalnum() and len(code) <= 30 else ''
+            except (ValueError, AttributeError):
+                code = ''
+            raise ValueError(f'模型请求失败 HTTP {response.status_code}（服务错误码 {code or "未知"}）；请检查密钥、接口类型、模型权限和余额')
         return response.json()['choices'][0]['message']
 
 def validate_brief(content, tools, profile):
@@ -54,7 +63,7 @@ def validate_brief(content, tools, profile):
     return brief
 
 async def generate(run_id, profile, recent=(), turn=None, tools=None):
-    turn = turn or openai_turn
+    turn = turn or llm_turn
     since = datetime.now(timezone.utc) - timedelta(hours=24)
     tools = tools or Tools(data_dir() / 'runs' / run_id, since, recent)
     preferences = {key: profile[key] for key in ('topics', 'keywords', 'excluded_keywords')}

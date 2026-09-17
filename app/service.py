@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 from app.agent import generate
 from app.db import connect, dumps, now
 from app.mail import send_mail
+from app.llm_config import api_key
 
 TASKS = set()
 
@@ -64,7 +65,7 @@ def due_profiles(current=None):
 async def scheduler():
     # ponytail: one process owns scheduling; use a durable queue for multi-worker deployment.
     while True:
-        for user_id, key in (due_profiles() if os.getenv('OPENAI_API_KEY') else []):
+        for user_id, key in (due_profiles() if api_key() else []):
             run_id = create_run(user_id, key)
             if run_id:
                 spawn(execute_run(run_id, automatic=True))
